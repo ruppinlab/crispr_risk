@@ -1,7 +1,7 @@
 # Version for Github
 source('Step0_Globally_used_Functions_and_Datasets.R')
 
-#Plot Figure 3B
+#Plot Figure 3B and Figure S6
 ########################################################################
 #######Load and Preprocess the data
 ########################################################################
@@ -50,7 +50,7 @@ ggplot(summarydf2plot[summarydf2plot$Mix=='5/95',], aes(y=Percent_Mutant, x=Day,
   labs(x='Days', y='% p53-mutated cells in co-culture', color='')
 dev.off()
 ########################################################################
-#######Supp Figure S2
+#######Supp Figure S6
 ########################################################################
 compAssay_Page2=readxl::read_xlsx('../Data/Competition_Analysis3.xlsx', sheet = 2)
 long_df2plot=gather(compAssay_Page2, Day, Percent_Mutant, D0:D25, factor_key=TRUE)
@@ -59,7 +59,7 @@ summarydf2plot = summarySE(long_df2plot, measurevar="Percent_Mutant", groupvars=
 summarydf2plot=summarydf2plot[summarydf2plot$Gene=='ANKRD49' | summarydf2plot$Gene=='FANCG'| summarydf2plot$Gene=='TFAP4',]
 summarydf2plot$Gene=factor(as.character(summarydf2plot$Gene))
 
-tiff('../Plots/figureS2.tiff', width=800, height=300)
+tiff('../Plots/figureS6.tiff', width=800, height=300)
 ggplot(summarydf2plot[summarydf2plot$Mix=='5/95',], aes(y=Percent_Mutant, x=Day, color=System))+
   geom_point()+
   geom_line(data = summarydf2plot[summarydf2plot$Mix=='5/95',],

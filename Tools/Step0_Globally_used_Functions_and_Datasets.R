@@ -22,7 +22,8 @@ installORload.bioc<-function(packages){
 packages_required<-c('parallel', 'grid', 'ggplot2', 'gridExtra',
                      'cowplot', 'ggpubr', 'ggrepel', 'readxl',
                      'reshape2','data.table', 'statar', 'tidyr', 'Rmisc',
-                     'seqinr', 'matrixStats','tictoc','BiocManager','rowr')
+                     'seqinr', 'matrixStats','tictoc','BiocManager',
+                     'reshape2', 'plyr', 'fgsea')
 installORload(packages_required)
 installORload.bioc("fgsea")
 
@@ -269,17 +270,43 @@ Randomized_Testing_CRISPR_damage_bias<-function(GeneName='TP53',
        shrna_DE_pos=shrna_DE_pos[order(shrna_DE_pos$Effect_Size,decreasing = F),])
 }
 
+enriched_pathway<-function(geneList,
+                           score,
+                           pathways_list){
+  names(score)<-geneList
+  score=na.omit(score)
+  score=score[!is.infinite(score)]
+  gsea.res <- fgsea(pathways_list, score, 1e4, minSize = 0)
+  gsea.res=gsea.res[order(gsea.res$pval),]
+  gsea.res=as.data.frame(gsea.res[,1:5])
+  gsea.res
+}
+#Subsetting a set of columns
+colSubset<-function(mat, column_Names){
+  mat[,na.omit(match(column_Names, colnames(mat)))]
+}
+#Subsetting a set of rows
+rowSubset<-function(mat, row_Names){
+  mat[na.omit(match(row_Names, rownames(mat))),]
+}
+
+vectorSubset<-function(vec, Names){
+  vec[!is.na(match(names(vec), Names))]
+}
+
+
 ########################################################################
 ###Files required in the Project
 ########################################################################
 # loading matrices needed
 # CRISPR screening version : https://depmap.org/portal/download/
-avana=readRDS('../Data/avana.RDS')
+setwd('/Users/sinhas8/crispr_risk-master/')
+avana=readRDS('Data/avana.RDS')
 # avana screening : https://depmap.org/portal/download/
-achilles=readRDS('../Data/achilles.RDS')
+achilles=readRDS('Data/achilles.RDS')
 # Mutation profiles of respective cell lines
-Mut_CCLE=readRDS('../Data/Mut_CCLE.RDS')
+Mut_CCLE=readRDS('Data/Mut_CCLE.RDS')
 # gene-level CNV profile
-CNV=readRDS('../Data/CNV.RDS')
+CNV=readRDS('Data/CNV.RDS')
 # Expression profile
-Exp=readRDS('../Data/Exp.RDS')
+Exp=readRDS('Data/Exp.RDS')

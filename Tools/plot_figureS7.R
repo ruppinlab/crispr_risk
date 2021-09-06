@@ -3,7 +3,6 @@ source('Tools/Step0_Globally_used_Functions_and_Datasets.R')
 require(PRROC);   # Library to generate and analyze PR curves
 require(rafalib);   # This library is used to adjust labeling on graphs
 
-# Cas9 inducing signature difference by KRAS status
 ############################################################
 # Step 0:: Preprocessing data
 ############################################################

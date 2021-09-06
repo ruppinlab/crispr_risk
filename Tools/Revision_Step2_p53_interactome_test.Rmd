@@ -1,0 +1,50 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+ppi_mat=readRDS('/Users/sinhas8/Downloads/ppi_mat.RDS')
+CDE_pos_neg_COSMIC=readRDS('/Users/sinhas8/Project_CRISPR/Project_CRISPR_bias/Data/CDE_pos_neg_COSMIC.RDS')
+p53_interactome=names(head(sort(na.omit(unlist(ppi_mat['TP53',])), decreasing = T), 500))
+sum(p53_interactome=='')
+write.csv(p53_interactome, '/Users/sinhas8/Project_CRISPR/Project_CRISPR_bias/Manuscript/TableS6B_Aug2021.csv')
+p53_interactome=names(CDE_pos_neg_COSMIC)[na.omit(match(p53_interactome, names(CDE_pos_neg_COSMIC)))]
+p53_interactome=sort(p53_interactome)
+p53_interactome=c(p53_interactome,'VHL')
+p53_interactome_analysis=data.frame(
+  CDE_positive_genes=sort(sapply(CDE_pos_neg_COSMIC[p53_interactome], function(x) 
+  sapply(x, length))[1,]))
+p53_interactome_analysis$chi_sq_p=0
+p53_interactome_analysis$chi_sq_p[!is.na(match(rownames(p53_interactome_analysis), names(Log_Sig)))]=Log_Sig[na.omit(match(rownames(p53_interactome_analysis), names(Log_Sig)))]
+tail(p53_interactome_analysis)
+p53_interactome_analysis$chi_sq_p[rownames(p53_interactome_analysis)=='KRAS'] = 308.0
+p53_interactome_analysis$chi_sq_p[rownames(p53_interactome_analysis)=='VHL'] = 193.8
+p53_interactome_analysis$geneNames=rownames(p53_interactome_analysis)
+
+review_figure1 <- ggplot(p53_interactome_analysis,
+       aes(x=chi_sq_p, y=CDE_positive_genes))+
+	geom_point()+
+	labs(x=expression(-log[10](p)), y='Number of CDE+ genes')+
+	geom_text_repel(
+	    data = subset(p53_interactome_analysis, CDE_positive_genes > 1 | chi_sq_p>1),
+	    aes(label = geneNames),
+	    box.padding = unit(0.35, "lines"),
+	    point.padding = unit(0.3, "lines") )+
+  theme_bw(base_size = 25)
+ggsave(review_figure1, filename = '/Users/sinhas8/Project_CRISPR/review_figure1.tiff',
+       width = 6, height = 6)
+  
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

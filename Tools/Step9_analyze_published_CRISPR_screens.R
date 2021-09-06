@@ -1,5 +1,6 @@
 # Version for Github
-source('Step0_Globally_used_Functions_and_Datasets.R')
+setwd('/Users/sinhas8/crispr_risk-master/')
+source('Tools/Step0_Globally_used_Functions_and_Datasets.R')
 
 # Centralized pipeline for All screenings
 ########################################################################

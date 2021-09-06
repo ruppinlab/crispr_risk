@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+# Load GSP and GSN standards
+require(ggrepel)
+setwd('/Users/sinhas8/Downloads/msb188679-sup-0001-Data_and_Code')
+nonEss <- read.csv("training_nonessential.txt",header=T,sep="\t",stringsAsFactors=F);
+ribosomal <- read.csv('/Users/sinhas8/crispr_risk-master/Data/ribosomal_genes.txt', sep='\t')
+ribosomal_genes <- ribosomal$Approved.symbol
+ess <- read.csv("core-v2-gene-hgnc",header=F,sep="\t",stringsAsFactors=F);
+ribosomal_genes_inHartList=ribosomal_genes[ribosomal_genes %in% ess$V1]
+
+susceptibility_crispr <- function(geneset_for_func=ess$V1, drivergene='TP53'){
+  avana_subset=avana[na.omit(match(geneset_for_func,rownames(avana))),]
+  mutated_cellLines=Mut_CCLE[drivergene,]>0
+  apply(avana_subset, 1, function(x)
+    median(x[mutated_cellLines], na.rm = T) - median(x[!mutated_cellLines], na.rm = T))
+}
+
+susceptibility_shRNA <- function(geneset_for_func=ess$V1, drivergene='TP53'){
+  achilles_subset=achilles[na.omit(match(geneset_for_func,rownames(achilles))),]
+  mutated_cellLines=Mut_CCLE[drivergene,]>0
+  apply(achilles_subset, 1, function(x)
+    median(x[mutated_cellLines], na.rm = T) - median(x[!mutated_cellLines], na.rm = T))
+}
+
+Vog_Gene_df=get(load('/Users/sinhas8/crispr_risk-master/Data/vogelstein.RData'))
+Vog_Genes=Vog_Gene_df$symbol
+Vog_Genes=Vog_Genes[Vog_Genes %in% rownames(Mut_CCLE)]
+
+Volg_genes_Ess_difference=lapply(Vog_Genes, function(x)
+  data.frame(crispr=susceptibility_crispr(geneset_for_func = ribosomal_genes_inHartList,drivergene = x),
+             shRNA=susceptibility_shRNA(geneset_for_func = ribosomal_genes_inHartList,drivergene = x)))
+
+names(Volg_genes_Ess_difference)=Vog_Genes
+df2plot_mean_susceptibility_ess=data.frame(t(sapply(Volg_genes_Ess_difference, function(x) colMeans(x))))
+df2plot_mean_susceptibility_ess$geneName=rownames(df2plot_mean_susceptibility_ess)
+df2plot_mean_susceptibility_ess$pair_rank=rank(df2plot_mean_susceptibility_ess$crispr)-rank(df2plot_mean_susceptibility_ess$shRNA)
+
+df2plot_mean_susceptibility_ess=df2plot_mean_susceptibility_ess[order(rank(df2plot_mean_susceptibility_ess$crispr)-rank(df2plot_mean_susceptibility_ess$shRNA), decreasing = T),]
+which(df2plot_mean_susceptibility_ess$geneName=='KRAS')
+which(df2plot_mean_susceptibility_ess$geneName=='TP53')
+df2plot_mean_susceptibility_ess
+review_fig2a <- ggplot(df2plot_mean_susceptibility_ess, aes(y=crispr, x=shRNA, label=geneName))+
+  geom_point()+
+  geom_text_repel()+
+  theme_bw(base_size = 15)+
+  labs(y='Difference in CRISPR-KO essentiality\nof Ess genes btw Mut vs WT',
+         x='Difference in shRNA-KD essentiality\n of Ess genes btw Mut vs WT')
+
+ggsave(review_fig2a, filename = '/Users/sinhas8/Project_CRISPR/review_figure2a_Aug24.tiff')
+ggsave(review_fig2a, filename = '/Users/sinhas8/Project_CRISPR/review_figure2a_Aug24.pdf')
+```
+
+```{r}
+Volg_genes_nonEss_difference=lapply(rownames(Volg_Mutselection), function(x)
+  data.frame(crispr=susceptibility_crispr(geneset_for_func = nonEss$Gene,drivergene = x),
+             shRNA=susceptibility_shRNA(geneset_for_func = nonEss$Gene,drivergene = x)))
+
+names(Volg_genes_nonEss_difference)=rownames(Volg_Mutselection)
+df2plot_mean_susceptibility_noness=data.frame(t(sapply(Volg_genes_nonEss_difference, function(x) colMeans(x))))
+df2plot_mean_susceptibility_noness$geneName=rownames(df2plot_mean_susceptibility_noness)
+df2plot_mean_susceptibility_noness$pair_rank=rank(df2plot_mean_susceptibility_noness$crispr)-rank(df2plot_mean_susceptibility_noness$shRNA)
+
+
+df2plot_mean_susceptibility_noness=df2plot_mean_susceptibility_noness[
+  order(rank(df2plot_mean_susceptibility_noness$crispr)-rank(df2plot_mean_susceptibility_noness$shRNA), decreasing = T),]
+
+
+which(df2plot_mean_susceptibility_noness$geneName=='KRAS')
+which(df2plot_mean_susceptibility_noness$geneName=='TP53')
+review_fig2b <- ggplot(df2plot_mean_susceptibility_noness, aes(y=crispr, x=shRNA, label=geneName))+
+  geom_point()+
+  geom_text_repel()+
+  theme_bw(base_size = 15)+
+  labs(y='Difference in CRISPR-KO essentiality\nof Non-Ess genes btw Mut vs WT',
+         x='Difference in shRNA-KD essentiality\n of Non-Ess genes btw Mut vs WT')
+library("cowplot")
+
+ggsave(review_fig2b, filename = '/Users/sinhas8/Project_CRISPR/review_figure2b.tiff')
+ggsave(plot_grid(review_fig2a,review_fig2b, labels = c('A', 'B')),
+       filename = '/Users/sinhas8/Project_CRISPR/Review_figure2.tiff',
+       height=6, width = 12)
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

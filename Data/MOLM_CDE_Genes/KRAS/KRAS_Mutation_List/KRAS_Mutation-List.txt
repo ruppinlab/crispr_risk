@@ -1,7 +1,0 @@
-##ReadME for KRAS_Mutation Hotspots files::
-Here, we have simply listed the hotspot mutations of KRAS in our cohort.
-
-### Mutation Details
-chr12:25398284C>T g.chr12:25398285C>A g
-                 12                   8 
-

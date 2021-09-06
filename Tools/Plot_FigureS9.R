@@ -11,7 +11,8 @@ hallmark_genes=read.gmt('Data/h.all.v7.1.symbols.gmt')
 CDE=read.csv('Data/CDE_allThree.csv')
 CDE=lapply(CDE, function(x) as.character(x[x!='']))
 CDE=CDE[c(1, 2, 5, 6)]
-exp=read_xlsx('Data/cas9_diffExp.xlsx'); annotation=exp[,1:4]; exp=exp[,-(1:4)]
+exp=readRDS('Data/exp_cas9_ParentalVSCas9Induced.RDS')
+annotation=exp[,1:4]; exp=exp[,-(1:4)]
 exp_cas9=exp[,grep('cas9',colnames(exp), ignore.case = T)]
 exp_Parental=exp[,-grep('cas9',colnames(exp), ignore.case = T)]
 colnames(exp_cas9)=colnames(exp_Parental)
